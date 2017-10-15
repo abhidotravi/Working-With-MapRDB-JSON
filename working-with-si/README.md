@@ -1,6 +1,10 @@
 # Secondary Indexes
 MapR-DB JSON supports **_secondary indexes_** (beginning with MapR 6.0) which significantly enhances query performance. 
 
+* [Create Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#3-create-secondary-indexes-for-faster-queries)
+* [List Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#4-list-the-indexes-of-a-table)
+* [Remove Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#5-remove-index-table-if-not-required)
+
 Secondary indexes are created on fields that are most frequently queried. Indexes are essentially tables where data is ordered on indexed fields. Thus providing efficient access to data by *reducing* **i/o cost** (by reducing amount of data scanned) and **cpu cost** (by avoiding sort).
 
 **Data in MapR-DB JSON Table**
