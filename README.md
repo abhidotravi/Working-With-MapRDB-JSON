@@ -1,2 +1,7 @@
-# Working-With-MapRDB-JSON
-This repository contains tutorials and examples to help developers get started with MapRDB-JSON
+# MapRDB JSON
+**[_MapRDB JSON_](https://maprdocs.mapr.com/52/MapR-DB/JSON_DB/getting_started_json_ojai.html) is an enterprise grade document-oriented, "NoSQL" database.**
+
+### Guide
+--
+* [Secondary Indexes](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si)
+
