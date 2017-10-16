@@ -133,7 +133,9 @@ indexlist --table /business_table
 {"indexedFields":[{"sortOrder":"Asc","fieldPathStr":"stars","onMTime":false,"functional":false,"functionName":null,"fieldPathIdx":{"$numberLong":6}},{"sortOrder":"Asc","fieldPathStr":"state","onMTime":false,"functional":false,"functionName":null,"fieldPathIdx":{"$numberLong":2}}],"includedFields":[{"sortOrder":"None","fieldPathStr":"name","onMTime":false,"functional":false,"functionName":null,"fieldPathIdx":{"$numberLong":4}},{"sortOrder":"None","fieldPathStr":"address","onMTime":false,"functional":false,"functionName":null,"fieldPathIdx":{"$numberLong":5}}],"hashed":false,"fullIndex":true,"numHashPartitions":{"$numberLong":0},"unique":false,"external":false,"disabled":false,"primaryTablePath":"/business_table","indexFid":"2049.7462.436424","indexName":"index1","system":"maprdb","cluster":null,"connectionString":null,"missingAndNullOrdering":"MissingAndNullLast"}
 ```
 
-### 4. Specify query condition and projection
+### 4. Queries with condition and projection
+
+Let us try and fetch all establishments in Nevada which has a rating greater than 3 stars.
 
 **SQL Equivalent query**
 ```
@@ -145,10 +147,51 @@ select name, address, review_count from /business_table where stars > 3.0 and st
 find --table /business_table --fields name,address,review_count --where {"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]}
 ```
 OR
+
+**DB Shell query using JSON Grammar**
 ```
-find /business_table --query {"$select":["name","address"],"$where":{"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]}}
+find /business_table --query {"$select":["name","address","review_count"],"$where":{"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]}}
 ```
 
 > Note: The latter query uses a newly defined **JSON Grammar** for queries. So one could build an entire query as a JSON and provide that as an input to _--q / --query_.
 
-> Generic syntax: {"$select":["field1","field2",..],"$where":{query condition},"$sort":["field1",..],"$limit":number,"$offset":skip_number}
+> Generic syntax: {"$select":["field1","field2",..],"$where":{query condition},"$orderby":[{"field1":"asc"},{"field2","desc"},..],"$limit":number,"$offset":anothernumber}
+
+
+### 5. Queries with Order By
+
+Now we may have establishments with 5 rating but only one review. Hence we can order the results such that the ones with highest rating come first.
+
+**SQL Equivalent query**
+```
+select name, address, review_count from /business_table where stars > 3.0 and state = 'NV' order by review_count DESC, name ASC
+```
+
+**DB Shell query**
+```
+find --table /business_table --fields name,address,review_count --where {"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]} --orderby review_count:desc,name:asc
+```
+OR
+
+**DB Shell query using JSON Grammar**
+```
+find /business_table --query {"$select":["name","address","review_count"],"$where":{"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]},"$orderby":[{"review_count":"desc"},{"name":"asc"}]}
+```
+
+### 6. Queries with Order By, Offset and Limit
+
+Say you want to skip the first 10 businesses and want to target the next 15 of _"second-tier"_ businesses.
+
+**DB Shell query**
+```
+find --table /business_table --fields name,address,review_count --where {"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]} --orderby review_count:desc,name:asc --offset 10 --limit 15
+```
+OR
+
+**DB Shell query using JSON Grammar**
+```
+find /business_table --query {"$select":["name","address","review_count"],"$where":{"$and":[{"$gt":{"stars":3.0}},{"$eq":{"state":"NV"}}]},"$orderby":[{"review_count":"desc"},{"name":"asc"}],"$offset":10,"$limit":15}
+```
+
+> Note: The order of offset and limit does not matter. The execution is that _offset_ number of results are skipped and further results are limited to _limit_ number.
+
