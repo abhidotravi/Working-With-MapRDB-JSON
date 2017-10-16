@@ -9,7 +9,7 @@ Secondary indexes are created on fields that are most frequently queried. Indexe
 
 **Data in MapR-DB JSON Table**
 
-id | city | state | review_count |
+id | city | state | stars |
 --- | --- | --- | --- |
 1 | San Jose | CA | 4 |
 2 | Portland | OR | 3.5 |
@@ -18,9 +18,9 @@ id | city | state | review_count |
 5 | Chicago | IL | 4 |
 
 **Indexed Fields**
-Consider an index on **review_count** and **state**, where the order of each field is _ascending_. In this case, the data is first ordered by review_count and if more than one row have the same value for review_count, the rows are then ordered by state.
+Consider an index on **stars** and **state**, where the order of each field is _ascending_. In this case, the data is first ordered by stars and if more than one row have the same value for stars, the rows are then ordered by state.
 
-review_count | state | id |
+stars | state | id |
 --- | --- | --- |
 3.5 | NY | 4 |
 3.5 | OR | 2 |
@@ -31,17 +31,17 @@ review_count | state | id |
 > Note: "_ _id_" field is internally stored to identify the document.
 
 **Included Fields**
-MapR-DB JSON tables support the concept of _included fields_ in secondary index table. Consider the following query where the predicates are on indexed fields (review_count, state). 
+MapR-DB JSON tables support the concept of _included fields_ in secondary index table. Consider the following query where the predicates are on indexed fields (stars, state). 
 
 ```
-select city from /table where review_count > 3 and state < 'NJ' 
+select city from /table where stars > 3 and state < 'NJ' 
 ```
 
 _city_ is in select but not available in index table. Hence, for each row retrieved from index table, one would have to go to the primary table to retrieve the values for city. This would significantly increase random i/o. Thus index table supports the concept of _included fields_. These are fields that are stored in index table, alongside indexed fields.
 
 With city added as included field, the above index table would look like this.
 
-review_count | state | id | city |
+stars | state | id | city |
 --- | --- | --- | --- |
 3.5 | NY | 4 | Buffalo |
 3.5 | OR | 2 | Portland |
@@ -101,7 +101,7 @@ mapr importJSON -src /tmp/business.json -dst /business_table -idfield business_i
 [_maprcli_](https://maprdocs.mapr.com/52/ReferenceGuide/maprcli-REST-API-Syntax.html) stands for _MapR Command-line Interface_. 
 
 ```
-maprcli table index add -path /business_table -index index_review_count_state -indexedfields review_count:asc,state:asc -includedfields city
+maprcli table index add -path /business_table -index index_stars_state -indexedfields stars:asc,state:asc -includedfields city
 ```
 
 > Usage: maprcli table index add -path <primary_table_path> -index <index_name> -indexedfields <index_field1>[:sort_order],<index_field2>[:sort_order]... [-includedfield <included_field1>,...]
@@ -119,7 +119,7 @@ maprcli table index list -path /business_table -json
 
 > Note: If there are more than one indexes on the table and if you want to list one particular index, add the parameter _indexname_ to the command.
 
-> ```maprcli table index list -path /business_table -index index_review_count_state -json```
+> ```maprcli table index list -path /business_table -index index_stars_state -json```
 
 Sample output:
 ```
@@ -137,7 +137,7 @@ Sample output:
 			"hashed":false,
 			"indexState":"REPLICA_STATE_REPLICATING",
 			"idx":1,
-			"indexedFields":"review_count:ASC, state:ASC",
+			"indexedFields":"stars:ASC, state:ASC",
 			"includedFields":"city",
 			"isUptodate":true,
 			"minPendingTS":0,
@@ -159,6 +159,6 @@ Sample output:
 It is possible that you ran into a situation where index seems unnecessary and not required anymore. Index can be removed with following command.
 
 ```
-maprcli table index remove -path /business_table -index index_review_count_state
+maprcli table index remove -path /business_table -index index_stars_state
 ```
 
