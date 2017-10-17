@@ -10,7 +10,7 @@ Secondary indexes are created on fields that are most frequently queried. Indexe
 
 **Data in MapR-DB JSON Table**
 
-id | city | state | stars |
+`_id` | city | state | stars |
 --- | --- | --- | --- |
 1 | San Jose | CA | 4 |
 2 | Portland | OR | 3.5 |
@@ -21,7 +21,7 @@ id | city | state | stars |
 **Indexed Fields**
 Consider an index on **stars** and **state**, where the order of each field is _ascending_. In this case, the data is first ordered by stars and if more than one row have the same value for stars, the rows are then ordered by state.
 
-stars | state | id |
+stars | state | `_id` |
 --- | --- | --- |
 3.5 | NY | 4 |
 3.5 | OR | 2 |
@@ -29,7 +29,7 @@ stars | state | id |
 4 | IL | 5 |
 4.5 | NC | 3 |
 
-> Note: "_ _id_" field is internally stored to identify the document.
+> Note: `_id` field is internally stored to identify the document.
 
 **Included Fields**
 MapR-DB JSON tables support the concept of _included fields_ in secondary index table. Consider the following query where the predicates are on indexed fields (stars, state). 
@@ -42,7 +42,7 @@ _city_ is in select but not available in index table. Hence, for each row retrie
 
 With city added as included field, the above index table would look like this.
 
-stars | state | id | city |
+stars | state | `_id` | city |
 --- | --- | --- | --- |
 3.5 | NY | 4 | Buffalo |
 3.5 | OR | 2 | Portland |
