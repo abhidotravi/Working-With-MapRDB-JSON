@@ -2,8 +2,9 @@
 MapR-DB JSON supports **_secondary indexes_** (beginning with MapR 6.0) which significantly enhances query performance. 
 
 * [Create Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#3-create-secondary-indexes-for-faster-queries)
-* [List Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#4-list-the-indexes-of-a-table)
-* [Remove Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#5-remove-index-table-if-not-required)
+* [Hashed Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#4-hashed-index-tables-and-how-to-create-them)
+* [List Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#5-list-the-indexes-of-a-table)
+* [Remove Index](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#6-remove-index-table-if-not-required)
 
 Secondary indexes are created on fields that are most frequently queried. Indexes are essentially tables where data is ordered on indexed fields. Thus providing efficient access to data by *reducing* **i/o cost** (by reducing amount of data scanned) and **cpu cost** (by avoiding sort).
 
@@ -101,15 +102,25 @@ mapr importJSON -src /tmp/business.json -dst /business_table -idfield business_i
 [_maprcli_](https://maprdocs.mapr.com/52/ReferenceGuide/maprcli-REST-API-Syntax.html) stands for _MapR Command-line Interface_. 
 
 ```
-maprcli table index add -path /business_table -index index_stars_state -indexedfields stars:asc,state:asc -includedfields city
+maprcli table index add -path /business_table -index index_stars_state_review -indexedfields stars:asc,state:asc -includedfields name,address,review_count
 ```
 
-> Usage: maprcli table index add -path <primary_table_path> -index <index_name> -indexedfields <index_field1>[:sort_order],<index_field2>[:sort_order]... [-includedfield <included_field1>,...]
+> Usage: maprcli table index add -path <primary_table_path> -index <index_name> -indexedfields <index_field1>[:sort_order],<index_field2>[:sort_order]... [-includedfield <included_field1>,...] [-hashed true/false] [-numhashpartitions number]
 
 > sort_order can be _1 / asc / ASC_ for ascending and _-1 / desc / DESC_ for descending.
 
 
-### 4. List the indexes of a table
+### 4. Hashed Index Tables and how to create them
+
+Data in the index table are sorted by the values in the indexed field. Assume a situation where timeseries data is injected in to the table. These documents have to be indexed. Given the nature of timeseries data, we could very well run in to a situation where all incoming data are stored / served by one region of index table. Hence, to avoid this **hotspotting** MapR-DB JSON supports the concept of _Hashed Index Tables_.
+
+One could specify the number of hash partitions depending upon the expected load.
+
+Let's take an example of creating a hashed index on review_count field.
+```
+maprcli table index add -path /business_table -index index_review_count -indexedfields review_count:-1 -hashed true -numhashpartitions 32
+```
+### 5. List the indexes of a table
 
 The following command would list all the indexes of a table.
 
@@ -119,26 +130,26 @@ maprcli table index list -path /business_table -json
 
 > Note: If there are more than one indexes on the table and if you want to list one particular index, add the parameter _indexname_ to the command.
 
-> ```maprcli table index list -path /business_table -index index_stars_state -json```
+> ```maprcli table index list -path /business_table -index index_stars_state_review -json```
 
 Sample output:
 ```
 {
-	"timestamp":1508082787981,
-	"timeofday":"2017-10-15 08:53:07.981 GMT-0700 AM",
+	"timestamp":1508206409942,
+	"timeofday":"2017-10-16 07:13:29.942 GMT-0700 PM",
 	"status":"OK",
-	"total":1,
+	"total":2,
 	"data":[
 		{
-			"cluster":"sirius",
+			"cluster":"canopus",
 			"type":"maprdb.si",
-			"indexFid":"2049.7462.436366",
-			"indexName":"index_review_count_state",
+			"indexFid":"2049.49.393742",
+			"indexName":"index_stars_state_review",
 			"hashed":false,
 			"indexState":"REPLICA_STATE_REPLICATING",
 			"idx":1,
 			"indexedFields":"stars:ASC, state:ASC",
-			"includedFields":"city",
+			"includedFields":"name, address, review_count",
 			"isUptodate":true,
 			"minPendingTS":0,
 			"maxPendingTS":0,
@@ -148,17 +159,46 @@ Sample output:
 			"copyTableCompletionPercentage":100,
 			"numTablets":1,
 			"numRows":1000,
-			"totalSize":172032
+			"totalSize":212992
+		},
+		{
+			"cluster":"canopus",
+			"type":"maprdb.si",
+			"indexFid":"2049.64.393772",
+			"indexName":"index_review_count",
+			"hashed":true,
+			"numHashPartitions":32,
+			"indexState":"REPLICA_STATE_REPLICATING",
+			"idx":3,
+			"indexedFields":"review_count:DESC",
+			"isUptodate":true,
+			"minPendingTS":0,
+			"maxPendingTS":0,
+			"bytesPending":0,
+			"putsPending":0,
+			"bucketsPending":0,
+			"copyTableCompletionPercentage":100,
+			"numTablets":1,
+			"numRows":1000,
+			"totalSize":90112
 		}
 	]
 }
 ```
 
-### 5. Remove index table (if not required)
+### 6. Remove index table (if not required)
 
 It is possible that you ran into a situation where index seems unnecessary and not required anymore. Index can be removed with following command.
 
 ```
-maprcli table index remove -path /business_table -index index_stars_state
+maprcli table index remove -path /business_table -index index_review_count
 ```
 
+### 7. Eventually consistent
+
+MapR-DB JSON secondary indexes are eventually consistent i.e., it is possible for the indexes to have a slight lag and not be updated with data in primary table. You can ensure that the indexes are up to date with primary table by looking at the following fields in the output of [index list command](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#5-list-the-indexes-of-a-table).
+
+- _indexState_ should be _REPLICA_STATE_REPLICATING_
+- _isUptodate_ should be _true_
+- _bytesPending_, _putsPending_, _bucketsPending_ should be _0_
+- _copyTableCompletionPercentage_ should be _100_
