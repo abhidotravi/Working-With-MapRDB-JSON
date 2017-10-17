@@ -116,7 +116,7 @@ Data in the index table are sorted by the values in the indexed field. Assume a 
 
 One could specify the number of hash partitions depending upon the expected load.
 
-Let's take an example of creating a hashed index on review_count field.
+Let's take an example of creating a hashed index on _`review_count`_ field.
 ```
 maprcli table index add -path /business_table -index index_review_count -indexedfields review_count:-1 -hashed true -numhashpartitions 32
 ```
@@ -128,7 +128,7 @@ The following command would list all the indexes of a table.
 maprcli table index list -path /business_table -json
 ```
 
-> Note: If there are more than one indexes on the table and if you want to list one particular index, add the parameter _indexname_ to the command.
+> Note: If there are more than one indexes on the table and if you want to list one particular index, add the parameter _`indexname`_ to the command.
 
 > ```maprcli table index list -path /business_table -index index_stars_state_review -json```
 
@@ -198,7 +198,7 @@ maprcli table index remove -path /business_table -index index_review_count
 
 MapR-DB JSON secondary indexes are eventually consistent i.e., it is possible for the indexes to have a slight lag and not be updated with data in primary table. You can ensure that the indexes are up to date with primary table by looking at the following fields in the output of [index list command](https://github.com/aravi5/Working-With-MapRDB-JSON/tree/master/working-with-si#5-list-the-indexes-of-a-table).
 
-- _indexState_ should be _REPLICA_STATE_REPLICATING_
-- _isUptodate_ should be _true_
-- _bytesPending_, _putsPending_, _bucketsPending_ should be _0_
-- _copyTableCompletionPercentage_ should be _100_
+- _`indexState`_ should be _`REPLICA_STATE_REPLICATING`_
+- _`isUptodate`_ should be _`true`_
+- _`bytesPending`_, _`putsPending`_, _`bucketsPending`_ should be _`0`_
+- _`copyTableCompletionPercentage`_ should be _`100`_
